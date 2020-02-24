@@ -14,6 +14,6 @@ public class CarShadow : MonoBehaviour
     void Update()
     {
         this.transform.position = transform.parent.position + Vector3.up * 5;
-        this.transform.eulerAngles = new Vector3(90, 0, 0);
+        this.transform.localEulerAngles = new Vector3(90, 0, 0);
     }
 }
