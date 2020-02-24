@@ -6,9 +6,26 @@ public class Driving : MonoBehaviour
 {
     public WheelCollider flWheelCollider;
     public WheelCollider frWheelCollider;
+    public WheelCollider rlWheelCollider;
+    public WheelCollider rrWheelCollider;
+
+    public Transform flWheelModel;
+    public Transform frWheelModel;
+    public Transform rlWheelModel;
+    public Transform rrWheelModel;
+
+    public Transform flDiscBrake;
+    public Transform frDiscBrake;
+
     public float motorTorque = 20f;
     public float steerAngle = 10f;
+    // 刹车力量
+    public float brakeTorque = 100f;
     public Transform centerOfMass;
+
+    public float maxSpeed = 140;
+    public float minSpeed = 30;
+    private bool isBrake = false;
 
     // Start is called before the first frame update
     void Start()
@@ -19,10 +36,64 @@ public class Driving : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        flWheelCollider.motorTorque = Input.GetAxis("Vertical") * motorTorque;
-        frWheelCollider.motorTorque = Input.GetAxis("Vertical") * motorTorque;
+        // 获取速度
+        float currentSpeed = flWheelCollider.rpm * (flWheelCollider.radius * 2 * Mathf.PI) * 60 / 1000;
+
+        if (currentSpeed * Input.GetAxis("Vertical") < 0)
+        {
+            isBrake = true;
+        }
+        else
+        {
+            isBrake = false;
+        }
+        if (currentSpeed > maxSpeed && Input.GetAxis("Vertical") > 0 ||
+            currentSpeed < -minSpeed && Input.GetAxis("Vertical") < 0)
+        {
+            flWheelCollider.motorTorque = 0;
+            frWheelCollider.motorTorque = 0;
+        }
+        else
+        {
+            flWheelCollider.motorTorque = Input.GetAxis("Vertical") * motorTorque;
+            frWheelCollider.motorTorque = Input.GetAxis("Vertical") * motorTorque;
+        }
+
+        if (isBrake)
+        {
+            flWheelCollider.motorTorque = 0;
+            frWheelCollider.motorTorque = 0;
+            flWheelCollider.brakeTorque = brakeTorque;
+            frWheelCollider.brakeTorque = brakeTorque;
+        }
+        else
+        {
+            flWheelCollider.brakeTorque = 0;
+            frWheelCollider.brakeTorque = 0;
+        }
 
         flWheelCollider.steerAngle = Input.GetAxis("Horizontal") * steerAngle;
         flWheelCollider.steerAngle = Input.GetAxis("Horizontal") * steerAngle;
+
+        RotateWheel();
+        SteerWheel();
+    }
+
+    // 轮胎前后转动
+    void RotateWheel()
+    {
+        flDiscBrake.Rotate(flWheelCollider.rpm * 6 * Time.deltaTime * Vector3.right);
+        frDiscBrake.Rotate(flWheelCollider.rpm * 6 * Time.deltaTime * Vector3.right);
+        rlWheelModel.Rotate(flWheelCollider.rpm * 6 * Time.deltaTime * Vector3.right);
+        rrWheelModel.Rotate(flWheelCollider.rpm * 6 * Time.deltaTime * Vector3.right);
+    }
+
+    // 轮胎左右转动
+    void SteerWheel()
+    {
+        Vector3 localEulerAngles = flWheelModel.localEulerAngles;
+        localEulerAngles.y = flWheelCollider.steerAngle;
+        flWheelModel.localEulerAngles = localEulerAngles;
+        frWheelModel.localEulerAngles = localEulerAngles;
     }
 }
