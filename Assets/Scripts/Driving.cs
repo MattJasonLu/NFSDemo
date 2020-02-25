@@ -27,6 +27,11 @@ public class Driving : MonoBehaviour
     public float minSpeed = 30;
     private bool isBrake = false;
 
+    public AudioSource carEngineAudio;
+    private float currentSpeed;
+
+    public int[] speedArray;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -37,7 +42,7 @@ public class Driving : MonoBehaviour
     void Update()
     {
         // 获取速度
-        float currentSpeed = flWheelCollider.rpm * (flWheelCollider.radius * 2 * Mathf.PI) * 60 / 1000;
+        currentSpeed = flWheelCollider.rpm * (flWheelCollider.radius * 2 * Mathf.PI) * 60 / 1000;
 
         if (currentSpeed * Input.GetAxis("Vertical") < 0)
         {
@@ -77,6 +82,7 @@ public class Driving : MonoBehaviour
 
         RotateWheel();
         SteerWheel();
+        EngineSound();
     }
 
     // 轮胎前后转动
@@ -95,5 +101,22 @@ public class Driving : MonoBehaviour
         localEulerAngles.y = flWheelCollider.steerAngle;
         flWheelModel.localEulerAngles = localEulerAngles;
         frWheelModel.localEulerAngles = localEulerAngles;
+    }
+
+    // 根据速度调节引擎声音的音高
+    void EngineSound()
+    {
+        int index = 0;
+        for (int i = 0; i < speedArray.Length - 2; i++)
+        {
+            if (currentSpeed >= speedArray[i])
+            {
+                index = i;
+            }
+        }
+        int minSpeed = speedArray[index];
+        int maxSpeed = speedArray[index + 1];
+
+        carEngineAudio.pitch = 0.05f + (currentSpeed - minSpeed) / (maxSpeed - minSpeed) * 0.8f;
     }
 }

@@ -10,13 +10,9 @@ public class SmoothFollow : MonoBehaviour
     public float distance = 7f;
     public float smoothSpeed = 1;
 
-    public AudioClip audioClip;//获取音乐
-    private AudioSource audioSource;
 
     private void Start()
     {
-        //audioSource = this.GetComponent<AudioSource>();//获取Audio Source
-        //audioSource.Play();//播放
     }
 
     // Update is called once per frame
