@@ -28,9 +28,13 @@ public class Driving : MonoBehaviour
     private bool isBrake = false;
 
     public AudioSource carEngineAudio;
+    public AudioSource skidAudio;
     private float currentSpeed;
 
     public int[] speedArray;
+
+    public GameObject leftLight;
+    public GameObject rightLight;
 
     // Start is called before the first frame update
     void Start()
@@ -83,6 +87,42 @@ public class Driving : MonoBehaviour
         RotateWheel();
         SteerWheel();
         EngineSound();
+        Skid();
+        ControlLight();
+    }
+
+    void ControlLight()
+    {
+        if (currentSpeed < -3)
+        {
+            leftLight.SetActive(true);
+            rightLight.SetActive(true);
+        }
+        else
+        {
+            leftLight.SetActive(false);
+            rightLight.SetActive(false);
+        }
+    }
+
+
+    void Skid()
+    {
+        if (currentSpeed > 40 && Mathf.Abs(flWheelCollider.steerAngle) > 5)
+        {
+            WheelHit hit;
+            if (flWheelCollider.GetGroundHit(out hit) || frWheelCollider.GetGroundHit(out hit))
+            {
+                if (!skidAudio.isPlaying)
+                {
+                    skidAudio.Play();
+                }
+                else
+                {
+                    skidAudio.Stop();
+                }
+            }
+        }
     }
 
     // 轮胎前后转动
