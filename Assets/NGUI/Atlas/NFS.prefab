@@ -45,9 +45,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   material: {fileID: 2100000, guid: 09e5b6550ab12614baca4ea035bd68c9, type: 2}
   mSprites:
+  - name: car_select
+    x: 0
+    y: 448
+    width: 1024
+    height: 576
+    borderLeft: 0
+    borderRight: 0
+    borderTop: 0
+    borderBottom: 0
+    paddingLeft: 0
+    paddingRight: 0
+    paddingTop: 0
+    paddingBottom: 0
   - name: speed_display
     x: 0
-    y: 6
+    y: 197
     width: 250
     height: 250
     borderLeft: 0
@@ -59,8 +72,8 @@ MonoBehaviour:
     paddingTop: 0
     paddingBottom: 0
   - name: speed_display_point
-    x: 251
-    y: 244
+    x: 0
+    y: 184
     width: 106
     height: 12
     borderLeft: 0
