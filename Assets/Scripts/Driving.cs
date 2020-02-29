@@ -1,26 +1,36 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Driving : MonoBehaviour
 {
+    [HideInInspector]
     public WheelCollider flWheelCollider;
+    [HideInInspector]
     public WheelCollider frWheelCollider;
+    [HideInInspector]
     public WheelCollider rlWheelCollider;
+    [HideInInspector]
     public WheelCollider rrWheelCollider;
-
+    [HideInInspector]
     public Transform flWheelModel;
+    [HideInInspector]
     public Transform frWheelModel;
+    [HideInInspector]
     public Transform rlWheelModel;
+    [HideInInspector]
     public Transform rrWheelModel;
-
+    [HideInInspector]
     public Transform flDiscBrake;
+    [HideInInspector]
     public Transform frDiscBrake;
 
     public float motorTorque = 20f;
     public float steerAngle = 10f;
     // 刹车力量
     public float brakeTorque = 100f;
+    [HideInInspector]
     public Transform centerOfMass;
 
     public float maxSpeed = 140;
@@ -29,12 +39,42 @@ public class Driving : MonoBehaviour
 
     public AudioSource carEngineAudio;
     public AudioSource skidAudio;
+    public AudioSource crashAudio;
     private float currentSpeed;
 
     public int[] speedArray;
-
+    [HideInInspector]
     public GameObject leftLight;
+    [HideInInspector]
     public GameObject rightLight;
+
+    public GameObject skidMark;
+    private bool isGround;
+
+    private float vertical = 1;
+    private float horizontal = 0;
+
+    private void Awake()
+    {
+        InitProperty();
+    }
+
+    private void InitProperty()
+    {
+        this.flWheelCollider = transform.Find("WheelColliders/WheelFLCollider").GetComponent<WheelCollider>();
+        this.frWheelCollider = transform.Find("WheelColliders/WheelFRCollider").GetComponent<WheelCollider>();
+        this.rlWheelCollider = transform.Find("WheelColliders/WheelRLCollider").GetComponent<WheelCollider>();
+        this.rrWheelCollider = transform.Find("WheelColliders/WheelRRCollider").GetComponent<WheelCollider>();
+        this.flWheelModel = transform.Find("WheelFL");
+        this.frWheelModel = transform.Find("WheelFR");
+        this.rlWheelModel = transform.Find("WheelRL");
+        this.rrWheelModel = transform.Find("WheelRR");
+        this.flDiscBrake = transform.Find("WheelFL/DiscBrakeFL");
+        this.frDiscBrake = transform.Find("WheelFR/DiscBrakeFR");
+        this.centerOfMass = transform.Find("CenterOfMass").transform;
+        this.leftLight = transform.Find("Lights/LeftLight").gameObject;
+        this.rightLight = transform.Find("Lights/RightLight").gameObject;
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -47,7 +87,7 @@ public class Driving : MonoBehaviour
     {
         // 获取速度
         currentSpeed = flWheelCollider.rpm * (flWheelCollider.radius * 2 * Mathf.PI) * 60 / 1000;
-
+        horizontal = Input.acceleration.x;
         if (currentSpeed * Input.GetAxis("Vertical") < 0)
         {
             isBrake = true;
@@ -87,8 +127,12 @@ public class Driving : MonoBehaviour
         RotateWheel();
         SteerWheel();
         EngineSound();
-        Skid();
         ControlLight();
+    }
+
+    private void FixedUpdate()
+    {
+        Skid();
     }
 
     void ControlLight()
@@ -105,22 +149,53 @@ public class Driving : MonoBehaviour
         }
     }
 
+    private Vector3 lastFLSkidPos = Vector3.zero;
+    private Vector3 lastFRSkidPos = Vector3.zero;
 
     void Skid()
     {
-        if (currentSpeed > 40 && Mathf.Abs(flWheelCollider.steerAngle) > 5)
+        if (currentSpeed > 40 && Mathf.Abs(flWheelCollider.steerAngle) > 30)
         {
             WheelHit hit;
-            if (flWheelCollider.GetGroundHit(out hit) || frWheelCollider.GetGroundHit(out hit))
+            if (flWheelCollider.GetGroundHit(out hit))
             {
-                if (!skidAudio.isPlaying)
+                isGround = true;
+                if (lastFLSkidPos.x != 0 && lastFLSkidPos.y != 0 && lastFLSkidPos.z != 0)
                 {
-                    skidAudio.Play();
+                    Vector3 pos = hit.point;
+                    pos.y += 0.05f;
+                    Quaternion rotation = Quaternion.LookRotation(hit.point - lastFLSkidPos);
+                    GameObject.Instantiate(skidMark, pos, rotation);
                 }
-                else
+                lastFLSkidPos = hit.point;
+            }
+            else
+            {
+                lastFLSkidPos = Vector3.zero;
+            }
+            if (frWheelCollider.GetGroundHit(out hit))
+            {
+                isGround = true;
+                if (lastFRSkidPos.x != 0 && lastFRSkidPos.y != 0 && lastFRSkidPos.z != 0)
                 {
-                    skidAudio.Stop();
+                    Vector3 pos = hit.point;
+                    pos.y += 0.05f;
+                    Quaternion rotation = Quaternion.LookRotation(hit.point - lastFRSkidPos);
+                    GameObject.Instantiate(skidMark, pos, rotation);
                 }
+                lastFRSkidPos = hit.point;
+            }
+            else
+            {
+                lastFRSkidPos = Vector3.zero;
+            }
+            if (!skidAudio.isPlaying && isGround)
+            {
+                skidAudio.Play();
+            }
+            else
+            {
+                skidAudio.Stop();
             }
         }
     }
@@ -158,5 +233,13 @@ public class Driving : MonoBehaviour
         int maxSpeed = speedArray[index + 1];
 
         carEngineAudio.pitch = 0.05f + (currentSpeed - minSpeed) / (maxSpeed - minSpeed) * 0.8f;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.collider.tag == "Wall")
+        {
+            crashAudio.Play();
+        }
     }
 }

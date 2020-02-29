@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
+    private TimeCount timeCount;
+
     // Start is called before the first frame update
     void Start()
     {
+        timeCount = this.GetComponent<TimeCount>();
         
     }
 
@@ -20,7 +23,21 @@ public class GameController : MonoBehaviour
     {
         if (other.transform.root.tag == "Car")
         {
-            print("Success");
+            timeCount.Stop();
+            float nowTotalTime = timeCount.totalTime;
+            float oldTotalTime = 99999;
+            if (PlayerPrefs.HasKey("bestTime"))
+            {
+                // 破纪录
+                oldTotalTime = PlayerPrefs.GetFloat("bestTime");
+                
+            }
+            timeCount.label.text = "当前时间：" + nowTotalTime + "s\n" + "最快时间：" + oldTotalTime + "s";
+            if (nowTotalTime < oldTotalTime)
+            {
+                oldTotalTime = nowTotalTime;
+            }
+            PlayerPrefs.SetFloat("bestTime", oldTotalTime);
         }
     }
 }

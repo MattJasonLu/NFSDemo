@@ -33,5 +33,6 @@ public class NumberCount : MonoBehaviour
         driving.enabled = true;
         timeCount.enabled = false;
         this.GetComponent<CarIdleEngine>().DisableSelf();
+        this.GetComponent<TimeCount>().Show();
     }
 }
